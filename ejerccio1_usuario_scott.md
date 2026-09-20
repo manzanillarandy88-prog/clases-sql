@@ -24,13 +24,15 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON hr.employees TO scott;
 
 
 
-Explicación de cada comando
+---
 
-    CREATE USER scott IDENTIFIED BY TIGER123456;
-    Crea la cuenta de usuario con el nombre y la clave requeridos.
+### Explicación de cada comando
 
-    ALTER USER scott QUOTA 100M ON USERS;
-    Otorga el límite máximo exacto de 100 Megabytes dentro del almacenamiento en el tablespace USERS.
+* **CREATE USER scott IDENTIFIED BY TIGER123456;**
+  Crea la cuenta de usuario con el nombre y la clave requeridos.
 
-    GRANT SELECT, INSERT, UPDATE, DELETE ON hr.employees TO scott;
-    Otorga estrictamente los 4 privilegios DML requeridos sobre la tabla employees perteneciente al esquema hr. No se concede ningún rol adicional (como CONNECT o RESOURCE) ni privilegios globales para cumplir con la regla de no dar permisos de más.
+* **ALTER USER scott QUOTA 100M ON USERS;**
+  Otorga el límite máximo exacto de 100 Megabytes dentro del almacenamiento en el tablespace USERS.
+
+* **GRANT SELECT, INSERT, UPDATE, DELETE ON hr.employees TO scott;**
+  Otorga estrictamente los 4 privilegios DML requeridos sobre la tabla employees perteneciente al esquema hr.
