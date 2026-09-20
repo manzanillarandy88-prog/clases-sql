@@ -1,0 +1,81 @@
+
+
+# Ejercicio Técnico — Analista de Datos Jr.
+
+---
+
+## Q1) Estructura del Staging
+
+Definición de la tabla de staging de sesión (`gtt_employee_summary`). Al tratarse de una tabla de sesión en Oracle SQL, se utiliza la sintaxis `GLOBAL TEMPORARY TABLE` con la opción `ON COMMIT PRESERVE ROWS`.
+
+```sql
+CREATE GLOBAL TEMPORARY TABLE gtt_employee_summary (
+    employee_id       NUMBER PRIMARY KEY,
+    full_name         VARCHAR2(100),
+    department_name   VARCHAR2(50),
+    annual_salary     NUMBER,
+    diff_vs_dept_avg  NUMBER,
+    seniority_level   VARCHAR2(20),
+    load_date         DATE DEFAULT SYSDATE
+) ON COMMIT PRESERVE ROWS;
+
+Q2) Carga de Staging con Columnas Analíticas
+
+Poblado de la tabla gtt_employee_summary transformando los datos desde employees y departments.
+SQL
+
+INSERT INTO gtt_employee_summary (
+    employee_id,
+    full_name,
+    department_name,
+    annual_salary,
+    diff_vs_dept_avg,
+    seniority_level
+)
+SELECT 
+    e.employee_id,
+    e.first_name || ' ' || e.last_name AS full_name,
+    d.department_name,
+    e.salary * 12 AS annual_salary,
+    (e.salary * 12) - AVG(e.salary * 12) OVER (PARTITION BY e.department_id) AS diff_vs_dept_avg,
+    CASE 
+        WHEN TRUNC(MONTHS_BETWEEN(SYSDATE, e.hire_date) / 12) < 5 THEN 'Junior'
+        WHEN TRUNC(MONTHS_BETWEEN(SYSDATE, e.hire_date) / 12) BETWEEN 5 AND 14 THEN 'Intermedio'
+        ELSE 'Senior'
+    END AS seniority_level
+FROM employees e
+LEFT JOIN departments d 
+    ON e.department_id = d.department_id;
+
+Explicación del desarrollo del Q2
+
+    Identificación: employee_id se extrae directamente de la tabla employees.
+
+    Concatenación de Nombre: Se utiliza el operador || para unir first_name y last_name con un espacio intermedio.
+
+    Inclusión de Empleados Sin Departamento: Se utiliza un LEFT JOIN para asegurar que los empleados cuyo department_id sea NULL no queden excluidos.
+
+    Salario Anualizado: Se multiplica el salario mensual (salary) por 12.
+
+    Diferencia vs Promedio de Departamento: Se emplea la función analítica AVG(e.salary * 12) OVER (PARTITION BY e.department_id) para calcular el promedio del departamento dentro de la misma pasada sin recurrir a subconsultas agregadas.
+
+    Antigüedad (Seniority Level): Se utiliza MONTHS_BETWEEN(SYSDATE, hire_date) / 12 junto con TRUNC para obtener los años completos trabajados y clasificarlos con una estructura CASE WHEN.
+
+    Fecha de Carga: No se incluye en el INSERT para que tome automáticamente la fecha/hora del sistema por su restricción DEFAULT SYSDATE.
+
+Q3) Consulta de Empleados del Departamento "Sales"
+
+Consulta SQL sobre el esquema HR para obtener el ID de los empleados que pertenecen al departamento de Ventas ("Sales").
+SQL
+
+SELECT e.employee_id
+FROM employees e
+JOIN departments d 
+    ON e.department_id = d.department_id
+WHERE d.department_name = 'Sales';
+
+Explicación del Q3
+
+    Se realiza un JOIN entre employees y departments relacionándolos por su campo común department_id.
+
+    Se aplica el filtro WHERE d.department_name = 'Sales' para acotar la consulta únicamente al departamento de Ventas y devolver sus respectivos employee_id.
